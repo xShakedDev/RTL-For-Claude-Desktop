@@ -12,7 +12,13 @@ Log "installed $($p.Version)"
 
 function Main { @(Get-CimInstance Win32_Process -Filter "Name='claude.exe'" | Where-Object { $_.CommandLine -notmatch '--type=' }) }
 function HasFlag { [bool](Main | Where-Object { $_.CommandLine -like '*--force-ui-direction=ltr*' }) }
-function Stop-All { Get-Process -Name claude -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep 5 }
+function All { @(Get-CimInstance Win32_Process -Filter "Name='claude.exe'") }
+function Show($tag) { foreach ($m in Main) { Log "  $tag main pid=$($m.ProcessId) cmd=$($m.CommandLine)" }; Log "  $tag total claude.exe: $((All).Count)" }
+function Stop-All {
+  foreach ($x in All) { try { Stop-Process -Id $x.ProcessId -Force -ErrorAction Stop } catch { Log "  stop $($x.ProcessId) failed: $($_.Exception.Message)" } }
+  for ($i = 0; $i -lt 20 -and (All).Count; $i++) { Start-Sleep -Milliseconds 500 }
+  Log "  after stop: $((All).Count) claude.exe left"
+}
 
 # 1. Install shortcuts
 & powershell -NoProfile -ExecutionPolicy Bypass -File .\windows\claude-ltr.ps1 -Install
@@ -29,25 +35,29 @@ function Click { $pr = Start-Process -FilePath $lnk.TargetPath -ArgumentList $ln
 # 2. Launch through the shortcut's exact command (Claude not running)
 Click
 Start-Sleep 30
-Log ("main: " + ((Main).CommandLine -join ' | '))
+Show 'now'
 Check 'cold start: Claude running with the flag' (HasFlag)
 
 # 3. Claude started normally (no flag), then the shortcut restarts it with the flag
 Stop-All
-Start-Process "shell:AppsFolder\$($p.PackageFamilyName)!Claude"
+$app = @((Get-AppxPackageManifest $p).Package.Applications.Application)[0]
+Invoke-CommandInDesktopPackage -PackageFamilyName $p.PackageFamilyName -AppId $app.Id -Command (Join-Path $p.InstallLocation $app.Executable)
 Start-Sleep 30
+Show 'normal'
 Check 'normal start: running without the flag' (((Main).Count -gt 0) -and -not (HasFlag))
 Click
 Start-Sleep 30
-Log ("main: " + ((Main).CommandLine -join ' | '))
+Show 'now'
 Check 'restart: running with the flag' (HasFlag)
 Check 'restart: a single main process' ((Main).Count -eq 1)
 
 # 4. Shortcut again while already fixed: no restart
-$pidBefore = (Main)[0].ProcessId
+$before = @(Main | Where-Object { $_.CommandLine -like '*--force-ui-direction=ltr*' } | ForEach-Object ProcessId)
 Click
-Start-Sleep 10
-Check 'already fixed: not restarted' ((Main).Count -ge 1 -and (Main)[0].ProcessId -eq $pidBefore)
+Start-Sleep 15
+Show 'again'
+$after = @(Main | Where-Object { $_.CommandLine -like '*--force-ui-direction=ltr*' } | ForEach-Object ProcessId)
+Check 'already fixed: not restarted' ($before.Count -ge 1 -and ($after -contains $before[0]))
 
 # 5. Uninstall
 Stop-All
