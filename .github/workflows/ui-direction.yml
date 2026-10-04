@@ -1,0 +1,13 @@
+name: ui-direction-test
+on:
+  push:
+    branches: [test/ui-direction]
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run test
+        shell: powershell
+        run: ./test.ps1
