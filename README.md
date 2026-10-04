@@ -34,6 +34,19 @@ claude plugin install smart-rtl@smart-rtl
 
 The plugin uses Claude Code's function-hook plugin API, which is in early access. It was tested with Claude Code 2.1.289.
 
+## Windows window layout fix
+
+On Windows with a Hebrew or Arabic display language, Claude Desktop lays out its window right to left: the window controls cover the app's own buttons and the browser pane opens in the wrong place. A plugin can't fix this, so the repository includes a small launcher, [`windows/claude-ltr.ps1`](windows/claude-ltr.ps1). It starts Claude with Chromium's `--force-ui-direction=ltr` switch and doesn't modify any app files.
+
+To add **Claude (LTR)** shortcuts to the desktop and the Start menu, run this in PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/xShakedDev/RTL-For-Claude-Desktop/main/windows/claude-ltr.ps1 -OutFile $env:TEMP\claude-ltr.ps1
+powershell -ExecutionPolicy Bypass -File $env:TEMP\claude-ltr.ps1 -Install
+```
+
+Open Claude from that shortcut from now on. If Claude is already running without the fix, the shortcut restarts it. The shortcut keeps working after Claude updates. To remove the shortcuts, run the script with `-Uninstall`.
+
 ## How it works
 
 A plugin can't change the app's CSS or set `dir` attributes. Instead, it rewrites the text of each message just before it is drawn, inserting invisible Unicode bidi control characters. The text saved in your conversation is not changed.
@@ -47,7 +60,7 @@ A plugin can't change the app's CSS or set `dir` attributes. Instead, it rewrite
 
 - **Alignment.** Where the app has no built-in RTL detection, such as your own messages, the reading order is fixed but the text stays left-aligned.
 - **Input box.** The input box isn't affected.
-- **Fonts and window controls.** Custom fonts and the window title bar can't be changed by a plugin.
+- **Fonts.** A plugin can't change fonts. For the window layout, see [Windows window layout fix](#windows-window-layout-fix).
 - **Terminal.** The terminal is left as is, because some terminals show the control characters as visible symbols.
 - **Copying.** Copying a message may include the invisible control characters.
 
