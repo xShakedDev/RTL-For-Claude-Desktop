@@ -64,7 +64,7 @@ function Start-Claude {
     # without it has to be closed first.
     if ($main.Count -and -not ($main | Where-Object { $_.CommandLine -like "*$Flag*" })) {
         $processes | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
-        for ($i = 0; $i -lt 20 -and (Get-ClaudeProcesses $claude).Count; $i++) {
+        for ($i = 0; $i -lt 20 -and @(Get-ClaudeProcesses $claude).Count; $i++) {
             Start-Sleep -Milliseconds 500
         }
     }

@@ -13,11 +13,11 @@ Log "installed $($p.Version)"
 function Main { @(Get-CimInstance Win32_Process -Filter "Name='claude.exe'" | Where-Object { $_.CommandLine -notmatch '--type=' }) }
 function HasFlag { [bool](Main | Where-Object { $_.CommandLine -like '*--force-ui-direction=ltr*' }) }
 function All { @(Get-CimInstance Win32_Process -Filter "Name='claude.exe'") }
-function Show($tag) { foreach ($m in Main) { Log "  $tag main pid=$($m.ProcessId) cmd=$($m.CommandLine)" }; Log "  $tag total claude.exe: $((All).Count)" }
+function Show($tag) { foreach ($m in Main) { Log "  $tag main pid=$($m.ProcessId) cmd=$($m.CommandLine)" }; Log "  $tag total claude.exe: $(@(All).Count)" }
 function Stop-All {
   foreach ($x in All) { try { Stop-Process -Id $x.ProcessId -Force -ErrorAction Stop } catch { Log "  stop $($x.ProcessId) failed: $($_.Exception.Message)" } }
-  for ($i = 0; $i -lt 20 -and (All).Count; $i++) { Start-Sleep -Milliseconds 500 }
-  Log "  after stop: $((All).Count) claude.exe left"
+  for ($i = 0; $i -lt 20 -and @(All).Count; $i++) { Start-Sleep -Milliseconds 500 }
+  Log "  after stop: $(@(All).Count) claude.exe left"
 }
 
 # 1. Install shortcuts
@@ -44,12 +44,12 @@ $app = @((Get-AppxPackageManifest $p).Package.Applications.Application)[0]
 Invoke-CommandInDesktopPackage -PackageFamilyName $p.PackageFamilyName -AppId $app.Id -Command (Join-Path $p.InstallLocation $app.Executable)
 Start-Sleep 30
 Show 'normal'
-Check 'normal start: running without the flag' (((Main).Count -gt 0) -and -not (HasFlag))
+Check 'normal start: running without the flag' ((@(Main).Count -gt 0) -and -not (HasFlag))
 Click
 Start-Sleep 30
 Show 'now'
 Check 'restart: running with the flag' (HasFlag)
-Check 'restart: a single main process' ((Main).Count -eq 1)
+Check 'restart: a single main process' (@(Main).Count -eq 1)
 
 # 4. Shortcut again while already fixed: no restart
 $before = @(Main | Where-Object { $_.CommandLine -like '*--force-ui-direction=ltr*' } | ForEach-Object ProcessId)
