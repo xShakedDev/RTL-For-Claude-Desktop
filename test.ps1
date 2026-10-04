@@ -24,8 +24,10 @@ Check 'icon extracted' ((Get-Item "$env:LOCALAPPDATA\ClaudeLTR\claude.ico" -Erro
 $lnk = (New-Object -ComObject WScript.Shell).CreateShortcut($desk)
 Log "shortcut: $($lnk.TargetPath) $($lnk.Arguments)"
 
+function Click { $pr = Start-Process -FilePath $lnk.TargetPath -ArgumentList $lnk.Arguments -PassThru; $done = $pr.WaitForExit(90000); Log "launcher exited: $done" }
+
 # 2. Launch through the shortcut's exact command (Claude not running)
-Start-Process -FilePath $lnk.TargetPath -ArgumentList $lnk.Arguments -Wait
+Click
 Start-Sleep 30
 Log ("main: " + ((Main).CommandLine -join ' | '))
 Check 'cold start: Claude running with the flag' (HasFlag)
@@ -35,7 +37,7 @@ Stop-All
 Start-Process "shell:AppsFolder\$($p.PackageFamilyName)!Claude"
 Start-Sleep 30
 Check 'normal start: running without the flag' (((Main).Count -gt 0) -and -not (HasFlag))
-Start-Process -FilePath $lnk.TargetPath -ArgumentList $lnk.Arguments -Wait
+Click
 Start-Sleep 30
 Log ("main: " + ((Main).CommandLine -join ' | '))
 Check 'restart: running with the flag' (HasFlag)
@@ -43,7 +45,7 @@ Check 'restart: a single main process' ((Main).Count -eq 1)
 
 # 4. Shortcut again while already fixed: no restart
 $pidBefore = (Main)[0].ProcessId
-Start-Process -FilePath $lnk.TargetPath -ArgumentList $lnk.Arguments -Wait
+Click
 Start-Sleep 10
 Check 'already fixed: not restarted' ((Main).Count -ge 1 -and (Main)[0].ProcessId -eq $pidBefore)
 
