@@ -1,8 +1,14 @@
 $ErrorActionPreference = 'Continue'
+$ProgressPreference = 'SilentlyContinue'
+function Log($m) { Write-Host ("[{0:HH:mm:ss}] {1}" -f (Get-Date), $m) }
 $url = 'https://downloads.claude.ai/releases/win32/x64/1.44121.2/Claude-817a7b4563855a33d4b678faefc71f87554445d8.msix'
-Invoke-WebRequest $url -OutFile claude.msix -UseBasicParsing
-"SHA256: " + (Get-FileHash claude.msix).Hash
+Log 'downloading'
+curl.exe -sSL --max-time 600 -o claude.msix $url
+Log ('downloaded bytes: ' + (Get-Item claude.msix).Length)
+Log ("SHA256: " + (Get-FileHash claude.msix).Hash)
+Log 'installing'
 Add-AppxPackage .\claude.msix
+Log 'installed'
 $p = Get-AppxPackage -Name Claude
 $p | Format-List Name, PackageFamilyName, Version, InstallLocation
 $m = Get-AppxPackageManifest $p
@@ -47,7 +53,7 @@ public static class W {
 function Stop-Claude { Get-Process -Name claude -ErrorAction SilentlyContinue | Stop-Process -Force; Start-Sleep 5 }
 function Report($label) {
   Start-Sleep 35
-  "=================== $label"
+  Log "=================== $label"
   $procs = @(Get-CimInstance Win32_Process -Filter "Name='claude.exe'")
   "processes: $($procs.Count)"
   $procs | Where-Object { $_.CommandLine -notmatch '--type=' } | ForEach-Object { "main cmdline: $($_.CommandLine)" }
@@ -57,6 +63,7 @@ function Report($label) {
 }
 
 Stop-Claude
+Log 'launch A'
 Invoke-CommandInDesktopPackage -PackageFamilyName $p.PackageFamilyName -AppId $app.Id -Command $exe -Args '--lang=he'
 Report 'A. Hebrew UI, no fix (Invoke-CommandInDesktopPackage)'
 
