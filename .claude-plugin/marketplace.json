@@ -1,0 +1,14 @@
+{
+  "name": "smart-rtl",
+  "owner": {
+    "name": "xShakedDev"
+  },
+  "description": "Right-to-left text direction for Claude Code in the Claude desktop app",
+  "plugins": [
+    {
+      "name": "smart-rtl",
+      "source": "./",
+      "description": "Right-to-left (Hebrew, Arabic, Persian) text direction for Claude Code in the Claude desktop app"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "smart-rtl",
+  "version": "1.0.0",
+  "description": "Right-to-left (Hebrew, Arabic, Persian) text direction for Claude Code in the Claude desktop app",
+  "author": { "name": "xShakedDev" },
+  "homepage": "https://github.com/xShakedDev/RTL-For-Claude-Desktop",
+  "repository": "https://github.com/xShakedDev/RTL-For-Claude-Desktop",
+  "license": "MIT",
+  "keywords": ["rtl", "hebrew", "arabic", "persian", "bidi"],
+  "types": "./types/index.d.ts"
+}
