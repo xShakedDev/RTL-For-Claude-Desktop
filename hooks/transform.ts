@@ -277,6 +277,55 @@ export function rtlMarkdown(text: string): string {
   return out.join('\n')
 }
 
+// The AskUserQuestion dialog's `questions` input, with every drawn string
+// (question, header, description, option label and description) run through
+// rtlPlain. Previews are mockups or code and are left alone.
+export function rtlQuestions(questions: readonly unknown[]): unknown[] {
+  const fix = (v: unknown) => (typeof v === 'string' ? rtlPlain(v) : v)
+
+  return questions.map(q => {
+    if (typeof q !== 'object' || q === null) return q
+    const { question, header, description, options, ...rest } = q as Record<string, unknown>
+
+    return {
+      ...rest,
+      question: fix(question),
+      header: fix(header),
+      ...(description === undefined ? {} : { description: fix(description) }),
+      ...(Array.isArray(options)
+        ? {
+            options: options.map(o => {
+              if (typeof o !== 'object' || o === null) return o
+              const opt = o as Record<string, unknown>
+
+              return {
+                ...opt,
+                label: fix(opt.label),
+                ...(opt.description === undefined ? {} : { description: fix(opt.description) }),
+              }
+            }),
+          }
+        : {}),
+    }
+  })
+}
+
+const BIDI_CONTROLS = /[‏⁦⁧⁩]/g
+
+// Removes the controls this plugin inserts from every string and key in a
+// value, so answers picked from a rewritten dialog reach the model clean.
+export function stripBidi<T>(value: T): T {
+  if (typeof value === 'string') return value.replace(BIDI_CONTROLS, '') as T
+  if (Array.isArray(value)) return value.map(stripBidi) as T
+  if (typeof value === 'object' && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([k, v]) => [k.replace(BIDI_CONTROLS, ''), stripBidi(v)]),
+    ) as T
+  }
+
+  return value
+}
+
 // A user's message, drawn as typed: each line isolated in its own direction.
 export function rtlPlain(text: string): string {
   if (!/[\u0590-\u08FF\uFB1D-\uFDFF\uFE70-\uFEFF]/.test(text)) return text

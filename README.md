@@ -14,6 +14,7 @@ Right-to-left text direction for **Claude Code in the Claude desktop app**. Hebr
 - **Inline code, math and LaTeX** (`2 + 3 = 5`, `$x^2$`) are kept left to right inside RTL text, so they don't get mirrored.
 - **Code blocks** are never touched.
 - **Your own messages** are fixed too.
+- **Question cards** (AskUserQuestion): the question, header and each option are fixed. The answer the model receives has the control characters removed.
 - **`/rtl`** turns the fixes on and off. The setting is remembered across sessions.
 
 ## Install

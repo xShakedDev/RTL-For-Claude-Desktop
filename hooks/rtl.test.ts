@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'claude-code/testing'
 
-import { LRI, PDI, RLI, RLM, rtlMarkdown, rtlPlain } from './transform'
+import { LRI, PDI, RLI, RLM, rtlMarkdown, rtlPlain, rtlQuestions, stripBidi } from './transform'
 
 describe('rtlMarkdown', () => {
   test('leaves English and code-only text untouched', () => {
@@ -60,6 +60,34 @@ describe('rtlMarkdown', () => {
 describe('rtlPlain', () => {
   test('a Hebrew user prompt opens with RLM', () => {
     expect(rtlPlain('תקן את הבאג ב-app.ts')).toBe(RLM + 'תקן את הבאג ב-app.ts')
+  })
+})
+
+describe('rtlQuestions', () => {
+  test('opens Hebrew question, header and options with RLM and leaves previews', () => {
+    const [q] = rtlQuestions([
+      {
+        question: 'איך לבנות את הבונוסים?',
+        header: 'Bonus',
+        multiSelect: false,
+        options: [
+          { label: 'בחירה כשער כניסה', description: 'Hold & Win כבונוס ראשי, ומשחק בחירה כבונוס שני', preview: 'שלום' },
+          { label: 'Other choice', description: 'English only' },
+        ],
+      },
+    ]) as Array<Record<string, any>>
+    expect(q!.question).toBe(RLM + 'איך לבנות את הבונוסים?')
+    expect(q!.header).toBe('Bonus')
+    expect(q!.options[0].label).toBe(RLM + 'בחירה כשער כניסה')
+    expect(q!.options[0].description.startsWith(RLM)).toBe(true)
+    expect(q!.options[0].preview).toBe('שלום')
+    expect(q!.options[1]).toEqual({ label: 'Other choice', description: 'English only' })
+  })
+
+  test('stripBidi cleans answer keys and values', () => {
+    expect(stripBidi({ answers: { [RLM + 'שאלה?']: RLM + LRI + 'x' + PDI } })).toEqual({
+      answers: { 'שאלה?': 'x' },
+    })
   })
 })
 
