@@ -14,7 +14,6 @@ Right-to-left text direction for **Claude Code in the Claude desktop app**. Hebr
 - **Inline code, math and LaTeX** (`2 + 3 = 5`, `$x^2$`) are kept left to right inside RTL text, so they don't get mirrored.
 - **Code blocks** are never touched.
 - **Your own messages** are fixed too.
-- **Question cards** (AskUserQuestion): the question, header and each option are fixed. The answer the model receives has the control characters removed.
 - **`/rtl`** turns the fixes on and off. The setting is remembered across sessions.
 
 ## Install
@@ -61,6 +60,7 @@ A plugin can't change the app's CSS or set `dir` attributes. Instead, it rewrite
 
 - **Alignment.** Where the app has no built-in RTL detection, such as your own messages, the reading order is fixed but the text stays left-aligned.
 - **Input box.** The input box isn't affected.
+- **Question cards.** The AskUserQuestion dialog shows bidi control characters as visible symbols, so it is left as is.
 - **Fonts.** A plugin can't change fonts. For the window layout, see [Windows window layout fix](#windows-window-layout-fix).
 - **Terminal.** The terminal is left as is, because some terminals show the control characters as visible symbols.
 - **Copying.** Copying a message may include the invisible control characters.
