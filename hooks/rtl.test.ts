@@ -81,4 +81,43 @@ describe('hooks', () => {
       expect(drawn).toBe(surface === 'terminal' ? 'קובץ index.js' : RLM + 'קובץ index.js')
     })
   }
+
+  for (const surface of ['desktop', 'terminal'] as const) {
+    test(`a typed Hebrew UserMessage on ${surface}`, async ($, on) => {
+      let engineText: string | undefined
+      on('ui.render', { component: 'UserMessage' }, ($, e) => {
+        engineText = e.props.text
+
+        return { type: 'Text', children: [e.props.text] }
+      })
+      const tree = await $.ui.render({
+        component: 'UserMessage',
+        surface,
+        requestId: 'u1',
+        props: { text: 'תקן את app.ts', origin: { kind: 'composer' }, isExpanded: true },
+      })
+      if (surface === 'terminal') {
+        expect(engineText).toBe('תקן את app.ts')
+      } else {
+        expect(engineText).toBeUndefined()
+        expect(JSON.stringify(tree)).toContain('"dir":"rtl"')
+      }
+    })
+  }
+
+  test('a task notification keeps the engine drawing', async ($, on) => {
+    let engineText: string | undefined
+    on('ui.render', { component: 'UserMessage' }, ($, e) => {
+      engineText = e.props.text
+
+      return { type: 'Text', children: [e.props.text] }
+    })
+    await $.ui.render({
+      component: 'UserMessage',
+      surface: 'desktop',
+      requestId: 'u2',
+      props: { text: 'משימה הסתיימה', origin: { kind: 'task-notification' }, isExpanded: true },
+    })
+    expect(engineText).toBe(RLM + 'משימה הסתיימה')
+  })
 })

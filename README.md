@@ -47,6 +47,8 @@ powershell -ExecutionPolicy Bypass -File $env:TEMP\claude-ltr.ps1 -Install
 
 Open Claude from that shortcut from now on. If Claude is already running without the fix, the shortcut restarts it. The shortcut keeps working after Claude updates. To remove the shortcuts, run the script with `-Uninstall`.
 
+With the plugin installed, `/ltr` in a Claude Code session runs the same script: it closes Claude, including every open session, and starts it again with the fix.
+
 ## How it works
 
 A plugin can't change the app's CSS or set `dir` attributes. Instead, it rewrites the text of each message just before it is drawn, inserting invisible Unicode bidi control characters. The text saved in your conversation is not changed.
